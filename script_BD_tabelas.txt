@@ -1,0 +1,87 @@
+-- Tabela Colecao
+CREATE TABLE Colecao (
+    ID SERIAL PRIMARY KEY,
+    Nome VARCHAR(255)
+);
+
+-- Tabela Livro
+CREATE TABLE Livro (
+    ISBN VARCHAR(13) PRIMARY KEY,
+    Titulo VARCHAR(255),
+    Editora VARCHAR(255),
+    ID_Colecao INT,
+    ID_Bibliotecario INT, -- ID do bibliotecário que registrou o livro
+    FOREIGN KEY (ID_Colecao) REFERENCES Colecao(ID),
+    FOREIGN KEY (ID_Bibliotecario) REFERENCES Bibliotecario(ID)
+);
+
+-- Tabela Categoria
+CREATE TABLE Categoria (
+    ID_cat SERIAL PRIMARY KEY,
+    Nome VARCHAR(255),
+    Tempo_Emprestimo INT
+);
+
+-- Tabela Exemplar
+CREATE TABLE Exemplar (
+    id SERIAL PRIMARY KEY,
+    ISBN_Livro VARCHAR(13),
+    Status VARCHAR(50),
+    ID_Bibliotecario INT, -- ID do bibliotecário que registrou o exemplar
+    FOREIGN KEY (ISBN_Livro) REFERENCES Livro(ISBN),
+    FOREIGN KEY (ID_Bibliotecario) REFERENCES Bibliotecario(ID)
+);
+
+-- Tabela Usuario
+CREATE TABLE Usuario (
+    ID SERIAL PRIMARY KEY,
+    nome VARCHAR(255),
+    Rua VARCHAR(255),
+    Cidade VARCHAR(255),
+    CEP VARCHAR(10),
+    Telefone VARCHAR(20),
+    Endereco VARCHAR(255),
+    Multa NUMERIC
+);
+
+-- Tabela Emprestimo
+CREATE TABLE Emprestimo (
+    ID SERIAL PRIMARY KEY,
+    Data_Emp DATE,
+    Data_Dev DATE,
+    Renovacoes INT,
+    ID_Exemplar INT,
+    FOREIGN KEY (ID_Exemplar) REFERENCES Exemplar(id)
+);
+
+-- Tabela Reserva
+CREATE TABLE Reserva (
+    ID SERIAL PRIMARY KEY,
+    Data_Res DATE,
+    ID_Livro INT,
+    FOREIGN KEY (ID_Livro) REFERENCES Livro(ID)
+);
+
+-- Tabela Bibliotecario
+CREATE TABLE Bibliotecario (
+    ID SERIAL PRIMARY KEY,
+    nome VARCHAR(255),
+    Rua VARCHAR(255),
+    Cidade VARCHAR(255),
+    CEP VARCHAR(10),
+    Telefone VARCHAR(20),
+    Endereco VARCHAR(255)
+);
+
+-- Tabela Assistente
+CREATE TABLE Assistente (
+    ID SERIAL PRIMARY KEY,
+    nome VARCHAR(255),
+    Rua VARCHAR(255),
+    Cidade VARCHAR(255),
+    CEP VARCHAR(10),
+    Telefone VARCHAR(20),
+    Endereco VARCHAR(255),
+    ID_Bibliotecario INT,
+    FOREIGN KEY (ID_Bibliotecario) REFERENCES Bibliotecario(ID)
+);

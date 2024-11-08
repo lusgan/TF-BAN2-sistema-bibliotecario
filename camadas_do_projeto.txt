@@ -1,0 +1,5 @@
+1-Camada de Apresentação (ou Interface do Usuário): É a camada responsável pela interação com o usuário. Ela exibe as informações e recebe entradas, sendo a "face" visível do sistema. É nessa camada que se implementa a interface gráfica ou qualquer outro meio de entrada e saída, permitindo, por exemplo, a inserção e consulta dos dados.
+
+2-Camada de Lógica de Negócio (ou Camada de Aplicação): Essa camada realiza o processamento central do sistema. Ela contém as regras de negócio e a lógica que conecta a interface do usuário ao banco de dados. Toda a lógica que define o funcionamento do sistema, como validações e cálculos, deve estar nessa camada, que, em geral, recebe as solicitações da camada de apresentação, processa, e interage com a camada de dados.
+
+3-Camada de Dados (ou Persistência): Responsável por gerenciar o armazenamento e a recuperação dos dados no banco de dados. Esta camada contém as classes e métodos necessários para conectar, consultar, atualizar e excluir dados do banco. A camada de dados é abstraída para que a lógica de negócio não precise lidar diretamente com os detalhes de como os dados são armazenados.

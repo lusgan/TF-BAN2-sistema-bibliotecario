@@ -1,0 +1,73 @@
+CREATE TRIGGER isentar_multas_professores
+BEFORE UPDATE ON Usuario
+FOR EACH ROW
+WHEN (NEW.Categoria = 'Professor' OR NEW.Categoria = 'Professor Pós-graduação')
+EXECUTE FUNCTION isentar_multa();
+
+CREATE FUNCTION isentar_multa() RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.Categoria = 'Professor' OR NEW.Categoria = 'Professor Pós-graduação' THEN
+        NEW.Multa := 0;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER limitar_renovacoes
+BEFORE UPDATE ON Emprestimo
+FOR EACH ROW
+WHEN (NEW.Renovacoes > 3)
+EXECUTE FUNCTION verificar_limite_renovacoes();
+
+CREATE FUNCTION verificar_limite_renovacoes() RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.Renovacoes > 3 THEN
+        RAISE EXCEPTION 'O empréstimo não pode ser renovado mais que 3 vezes.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER impedir_emprestimo_reserva
+BEFORE INSERT ON Emprestimo
+FOR EACH ROW
+EXECUTE FUNCTION verificar_colecao_reserva();
+
+CREATE FUNCTION verificar_colecao_reserva() RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT Nome FROM Colecao WHERE ID = (SELECT ID_Colecao FROM Livro WHERE ISBN = (SELECT ISBN_Livro FROM Exemplar WHERE id = NEW.ID_Exemplar))) = 'Reserva' THEN
+        RAISE EXCEPTION 'Não é permitido emprestar exemplares da coleção de reserva.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION pode_emprestar(id_usuario INT) RETURNS BOOLEAN AS $$
+DECLARE
+    atraso BOOLEAN;
+    multa BOOLEAN;
+    limite BOOLEAN;
+BEGIN
+    -- Verifica se o usuário tem livros atrasados
+    SELECT COUNT(*) > 0 INTO atraso 
+    FROM Emprestimo E
+    JOIN Exemplar EX ON E.ID_Exemplar = EX.ID
+    WHERE EX.Status = 'Atrasado' AND E.ID_Usuario = id_usuario;
+
+    -- Verifica se o usuário tem multas pendentes
+    SELECT Multa > 0 INTO multa
+    FROM Usuario
+    WHERE ID = id_usuario;
+
+    -- Verifica se o usuário excedeu o limite de livros emprestados
+    SELECT COUNT(*) >= (SELECT Tempo_Emprestimo FROM Categoria WHERE ID_cat = (SELECT Categoria_ID FROM Usuario WHERE ID = id_usuario)) INTO limite
+    FROM Emprestimo
+    WHERE ID_Usuario = id_usuario AND Data_Dev IS NULL;
+
+    IF atraso OR multa OR limite THEN
+        RETURN FALSE;
+    ELSE
+        RETURN TRUE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
