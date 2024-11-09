@@ -58,7 +58,25 @@ def cadastrar_exemplar(exemplar,ISBN):
     )
     
 def get_exemplares(ISBN):
-    return db.exemplares.find()
+    return db.livros.find({"ISBN" : ISBN})
+
+def get_exemplar(ISBN, numero):
+    # Realiza a busca do livro pelo ISBN e procura por um exemplar com o número especificado
+    livro = db.livros.find_one(
+        {
+            "ISBN": ISBN,
+            "Exemplares.num": numero  # Procura pelo número do exemplar dentro da lista
+        }
+    )
+
+    if livro:
+        # Percorre a lista de exemplares para encontrar o exemplar correto
+        for exemplar in livro['Exemplares']:
+            if exemplar['num'] == numero:
+                return exemplar  # Retorna o exemplar encontrado
+
+    return None  # Caso não encontre o exemplar
+
 
 def verificar_isbn(isbn):
     livro = db.livros.find_one({"ISBN": isbn})
@@ -66,3 +84,50 @@ def verificar_isbn(isbn):
         return True
     else:
         return False
+    
+
+
+def atualizar_exemplar(ISBN, numero, novo_status, nova_posse):
+    resultado = db.livros.update_one(
+    {
+        "ISBN": ISBN,
+        "Exemplares.num": numero  
+    },
+    {
+        "$set": {
+            "Exemplares.$.status": novo_status,
+            "Exemplares.$.posse": nova_posse
+        }
+    }
+)
+    
+
+def adicionar_emprestimo_usuario(emprestimo):
+  
+    db.emprestimos.insert_one(emprestimo.to_json())
+
+    
+    resultado = db.usuarios.update_one(
+        {"CPF": emprestimo.CPF},
+        {"$push": {"emprestimos": emprestimo.to_json()}}
+    )
+
+    if resultado.matched_count > 0:
+        print("Empréstimo adicionado com sucesso ao usuário.")
+    else:
+        print("Usuário não encontrado.")
+
+
+
+def get_id_ultimo_emprestimo():
+    ultimo_emprestimo = db.emprestimos.find_one({}, sort = [('_id', -1)])
+    
+    if not ultimo_emprestimo:
+        return 0
+    
+    else :
+        return ultimo_emprestimo['id']
+    
+
+def get_usuario(CPF):
+    return db.usuarios.find_one({"CPF": CPF})

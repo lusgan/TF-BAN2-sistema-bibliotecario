@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime, timedelta
+import DAO
 
 # Classes da Biblioteca
 class Livro:
@@ -88,10 +89,11 @@ class Usuario:
         self.endereco = endereco
         self.multa = multa
         self.categoria = categoria
+        self.emprestimos = None
         
     
     def to_json(self):
-         json = {'CPF': self.cpf, 'Nome' : self.nome, 'Rua' : self.rua, 'Cidade' : self.cidade, 'CEP' : self.cep, 'Telefone' : self.telefone, 'Endereco' : self.endereco, 'Multa' : self.multa, 'Categoria' : self.categoria}
+         json = {'CPF': self.cpf, 'Nome' : self.nome, 'Rua' : self.rua, 'Cidade' : self.cidade, 'CEP' : self.cep, 'Telefone' : self.telefone, 'Endereco' : self.endereco, 'Multa' : self.multa, 'Categoria' : self.categoria, "Emprestimos" : self.emprestimos}
          return json
     
 
@@ -121,19 +123,48 @@ class Autor:
 
 
 class Emprestimo:
-    def __init__(self, id_emprestimo, data_hoje, livro, usuario):
-        self.id = id_emprestimo
-        self.dataInicial = data_hoje
-        self.dataFinal = data_hoje + timedelta(days=7)
+    def __init__(self, data_hoje, ISBN, num_exemplar, CPF, qtd_dias):
+        self.id_emprestimo = DAO.get_id_ultimo_emprestimo() + 1;
+        self.dataInicial = data_hoje.isoformat()
+        self.dataFinal = (data_hoje + timedelta(days=qtd_dias)).isoformat()
         self.dia_que_foi_devolvido = None
-        self.livro = livro
-        self.usuario = usuario
+        self.ISBN =ISBN
+        self.num_exemplar = num_exemplar
+        self.CPF = CPF
+        self.multa = None
 
     def devolver(self, data):
         self.livro.emprestado = False
         self.dia_que_foi_devolvido = data
         if data > self.dataFinal:
             self.usuario.penalizar(data, self)
+    
+    def to_json(self):
+        
+        json = {'id': self.id_emprestimo, 'Inicio' : self.dataInicial, 'Fim' : self.dataFinal, 'Data de devolucao' : self.dia_que_foi_devolvido, 'ISBN' : self.ISBN, 'exemplar' : self.num_exemplar, 'CPF' : self.CPF, 'Multa' : self.multa}
+        return json
+            
+
+def emprestar_livro(emprestimo):
+    
+    #Colocar condicoes para emprestimo como : 
+    #nao ter livros atrasados 
+    #nao ter multas
+    #nao exceder o limite de livros pegos emprestado
+    #nao pode emprestar da colecao reserva
+    #so pode emprestar livros disponiveis  -----> OK
+    
+    exemplar = DAO.get_exemplar(emprestimo.ISBN, emprestimo.num_exemplar)
+    if exemplar['status'] == 'Indisponivel':
+        print("Exemplar indisponivel, ja esta emprestado.")
+    
+    
+    else:
+    
+        DAO.atualizar_exemplar(emprestimo.ISBN, emprestimo.num_exemplar, "Indisponivel", emprestimo.CPF)
+        DAO.adicionar_emprestimo_usuario(emprestimo)
+    
+
 
 class Biblioteca:
     def __init__(self):

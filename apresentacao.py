@@ -7,6 +7,7 @@ Created on Fri Nov  8 16:28:31 2024
 
 import biblioteca_com_teste_unitario
 import DAO
+import datetime
 #Funcionalidades:
 #1-Cadastrar bibliotecario
 #2-cadastrar assistente
@@ -14,7 +15,7 @@ import DAO
 #4-cadastrar livro
 #5-cadastrar exemplar
 #6-realizar emprestimo
-#7-localizar exemplar 
+#7-localizar exemplar   PARA ESSE JA CRIEI A FUNCAO DAO.GET_EXEMPLAR()
 #8-renovar emprestimo
 
 def menu():
@@ -144,22 +145,63 @@ while escolha!= 0 :
         else:
         
             num = int(input("Numero do exemplar:"))
-            status  = int(input("Status do exemplar:\n1- Disponivel\n2- Indisponivel\n"))
             
-            if status == 1:
-                status = 'Disponivel'
+            if DAO.get_exemplar(ISBN, num):
+                print("Exemplar com esse numero ja está cadastrado!")
             
-            elif status==2:
-                status = 'Indisponivel'
+            else:
+                status  = int(input("Status do exemplar:\n1- Disponivel\n2- Indisponivel\n"))
+                
+                if status == 1:
+                    status = 'Disponivel'
+                
+                elif status==2:
+                    status = 'Indisponivel'
+                
+                exemplar = biblioteca_com_teste_unitario.Exemplar(num, status)
+                DAO.cadastrar_exemplar(exemplar,ISBN)
+
+
+    
+    #realizar emprestimo
+    elif escolha == 6:
+        
+        data_hoje = datetime.date.today()
+        ISBN = input("ISBN:")
+        num_exemplar = int(input("Exemplar:"))
+        CPF = input("CPF:")
+        
+        usuario = DAO.get_usuario(CPF)
+        if not usuario:
+            print("usuario nao encontrado")
+        
+        else:
+            categoria = usuario['Categoria']['Categoria']
+            qtd_dias = "erro"
             
-            exemplar = biblioteca_com_teste_unitario.Exemplar(num, status)
-            DAO.cadastrar_exemplar(exemplar,ISBN)
+            if categoria == "Aluno de graduacao":
+                qtd_dias = 15
+            
+            elif categoria == "Aluno de pos-graduacao":
+                qtd_dias = 30
+            
+            elif categoria == "Professor":
+                qtd_dias = 30
+                
+            elif categoria == "Professor de pos-graduacao":
+                qtd_dias = 90
+            
+            emprestimo = biblioteca_com_teste_unitario.Emprestimo(data_hoje, ISBN, num_exemplar, CPF, qtd_dias)
+            
+            biblioteca_com_teste_unitario.emprestar_livro(emprestimo)
+            
 
-
-
-
-
-
+    elif escolha == 7:
+        ISBN = input("ISBN:")
+        numero = int(input("numero:"))
+        exemplar = DAO.get_exemplar(ISBN, numero)
+        print(exemplar)
+        
 
 
     
