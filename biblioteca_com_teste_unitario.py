@@ -3,16 +3,19 @@ from datetime import datetime, timedelta
 
 # Classes da Biblioteca
 class Livro:
-    def __init__(self, id, titulo, autores, ano, ISBN):
-        self.id = id
+    def __init__(self, titulo, autores, ISBN, editora, colecao,):
         self.titulo = titulo
         self.autores = autores #lista de autores
-        self.ano = ano
         self.ISBN = ISBN
-        self.emprestado = False
-
-    def esta_emprestado(self):
-        return self.emprestado
+        self.editora = editora
+        self.colecao = colecao
+        self.exemplares = []
+         
+    
+    def to_json(self):
+        json = { 'Titulo' : self.titulo, 'autores' : self.autores, 'ISBN' : self.ISBN, 'Editora' : self.editora, 'Colecao' : self.colecao, 'Exemplares' : self.exemplares}
+        return json
+    
     
     def nome_dos_autores_string(self):
         nomes = ""
@@ -26,9 +29,74 @@ class Livro:
             nomes = self.autores.nome
             
         return nomes
+
+
+class Exemplar:
+    def __init__(self, num, status):
+        self.num = num
+        self.status = status
+        self.posse = None
         
+    
+    def to_json(self):
+        json = { 'num' : self.num, 'status' : self.status, 'posse' : self.posse}
+        return json
+        
+        
+
+class Bibliotecario:
+    def __init__(self,cpf, nome, rua, cidade, cep, telefone, endereco):
+        self.cpf = cpf
+        self.nome = nome
+        self.rua = rua
+        self.cidade = cidade
+        self.cep = cep
+        self.telefone = telefone
+        self.endereco = endereco
+        
+    def to_json(self):
+        json = {'CPF': self.cpf, 'Nome' : self.nome, 'Rua' : self.rua, 'Cidade' : self.cidade, 'CEP' : self.cep, 'Telefone' : self.telefone, 'Endereco' : self.endereco}
+        return json
+
+
+class Assistente:
+    
+    def __init__(self, cpf, nome, rua, cidade, cep, telefone, endereco, supervisores):
+        self.cpf = cpf
+        self.nome = nome
+        self.rua = rua
+        self.cidade = cidade
+        self.cep = cep
+        self.telefone = telefone
+        self.endereco = endereco
+        self.supervisores = supervisores
+
+    def to_json(self):
+         json = {'CPF': self.cpf, 'Nome' : self.nome, 'Rua' : self.rua, 'Cidade' : self.cidade, 'CEP' : self.cep, 'Telefone' : self.telefone, 'Endereco' : self.endereco, 'Supervisores' : self.supervisores}
+         return json
+
+
 class Usuario:
-    def __init__(self, Registro_Academico, nome, email):
+    
+    def __init__(self,cpf, nome, rua, cidade, cep, telefone, endereco, multa, categoria):
+        self.cpf = cpf
+        self.nome = nome
+        self.rua = rua
+        self.cidade = cidade
+        self.cep = cep
+        self.telefone = telefone
+        self.endereco = endereco
+        self.multa = multa
+        self.categoria = categoria
+        
+    
+    def to_json(self):
+         json = {'CPF': self.cpf, 'Nome' : self.nome, 'Rua' : self.rua, 'Cidade' : self.cidade, 'CEP' : self.cep, 'Telefone' : self.telefone, 'Endereco' : self.endereco, 'Multa' : self.multa, 'Categoria' : self.categoria}
+         return json
+    
+
+'''class Usuario:
+    def __init__(self, Registro_Academico, nome, email, multa):
         self.Registro_Academico = Registro_Academico
         self.nome = nome
         self.email = email
@@ -43,7 +111,7 @@ class Usuario:
 
     def possui_penalidade(self, data):
         return self.data_ultima_penalidade is not None and data <= self.data_ultima_penalidade
-
+'''
 
 class Autor:
     
