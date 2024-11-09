@@ -131,3 +131,60 @@ def get_id_ultimo_emprestimo():
 
 def get_usuario(CPF):
     return db.usuarios.find_one({"CPF": CPF})
+
+
+def get_emprestimo(ISBN, exemplar):
+    return db.emprestimos.find_one({"ISBN": ISBN, "exemplar": exemplar}, {'_id': 0})
+
+
+def atualizar_emprestimo(ISBN, exemplar, data_devolucao, multa):
+    resultado = db.emprestimos.update_one(
+        {"ISBN": ISBN, "exemplar": exemplar},  # Filtro para encontrar o empréstimo
+        {
+            "$set": {
+                "data_devolucao": data_devolucao,  # Atualizar a data de devolução
+                "multa": multa  # Atualizar o valor da multa
+            }
+        }
+    )
+    
+    
+    
+    # Verifica se o empréstimo foi encontrado e atualizado
+    if resultado.matched_count > 0:
+        print("Empréstimo atualizado com sucesso!")
+    else:
+        print("Empréstimo não encontrado.")
+        
+
+def get_colecao(ISBN):
+    # Realiza a consulta no MongoDB para encontrar o livro com o ISBN fornecido
+    livro = db.livros.find_one(
+        {"ISBN": ISBN},  # Filtro para encontrar o livro com o ISBN
+        {"Colecao": 1, "_id": 0}  # Projeção para retornar apenas o campo Colecao
+    )
+    
+    # Verifica se o livro foi encontrado
+    if livro:
+        return livro.get('Colecao', None)  # Retorna o valor de 'Colecao', ou None se não existir
+    else:
+        return None  # Retorna None se o livro não for encontrado
+
+
+
+def apagar_emprestimo_usuario(CPF, emprestimo_id, multa):
+    # Remove o empréstimo com base no CPF e no ID do empréstimo
+    resultado = db.usuarios.update_one(
+        {"CPF": CPF},  # Filtro para encontrar o usuário pelo CPF
+        {
+            "$pull": {  # Remove o empréstimo com o ID especificado
+                "emprestimos": {"id": emprestimo_id}
+            },
+            "$set": {  # Atualiza o campo de multa, se aplicável
+                "multa": multa
+            }
+        }
+    )
+    
+    
+

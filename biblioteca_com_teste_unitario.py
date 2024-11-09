@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime, timedelta
+import datetime
 import DAO
 
 # Classes da Biblioteca
@@ -97,23 +98,7 @@ class Usuario:
          return json
     
 
-'''class Usuario:
-    def __init__(self, Registro_Academico, nome, email, multa):
-        self.Registro_Academico = Registro_Academico
-        self.nome = nome
-        self.email = email
-        self.data_ultima_penalidade = None
-        self.historico_de_emprestimos = []
-        self.historico_de_penalidades = []
-        
-    def penalizar(self, data_de_hoje, emprestimo):
-        self.data_ultima_penalidade = data_de_hoje + timedelta(days=15)
-        self.historico_de_penalidades.append(emprestimo)
-        print(f"Usuário penalizado até {self.data_ultima_penalidade}")
 
-    def possui_penalidade(self, data):
-        return self.data_ultima_penalidade is not None and data <= self.data_ultima_penalidade
-'''
 
 class Autor:
     
@@ -125,8 +110,8 @@ class Autor:
 class Emprestimo:
     def __init__(self, data_hoje, ISBN, num_exemplar, CPF, qtd_dias):
         self.id_emprestimo = DAO.get_id_ultimo_emprestimo() + 1;
-        self.dataInicial = data_hoje.isoformat()
-        self.dataFinal = (data_hoje + timedelta(days=qtd_dias)).isoformat()
+        self.dataInicial = data_hoje.strftime('%d-%m-%Y')
+        self.dataFinal = (data_hoje + timedelta(days=qtd_dias)).strftime('%d-%m-%Y')
         self.dia_que_foi_devolvido = None
         self.ISBN =ISBN
         self.num_exemplar = num_exemplar
@@ -143,27 +128,85 @@ class Emprestimo:
         
         json = {'id': self.id_emprestimo, 'Inicio' : self.dataInicial, 'Fim' : self.dataFinal, 'Data de devolucao' : self.dia_que_foi_devolvido, 'ISBN' : self.ISBN, 'exemplar' : self.num_exemplar, 'CPF' : self.CPF, 'Multa' : self.multa}
         return json
-            
+ 
 
-def emprestar_livro(emprestimo):
+def usuario_possui_atraso(CPF, data_hoje):
+    
+    usuario = DAO.get_usuario(CPF)    
+    emprestimos = usuario['emprestimos']    
+    
+    for emprestimo in emprestimos:
+        data_fim_iso = emprestimo['Fim']
+        
+        data_fim = datetime.datetime.strptime(data_fim_iso, "%d-%m-%Y").date()
+        
+        if data_hoje > data_fim : 
+            return True
+        
+        return False
+
+def emprestar_livro(emprestimo,data_hoje):
     
     #Colocar condicoes para emprestimo como : 
-    #nao ter livros atrasados 
-    #nao ter multas
-    #nao exceder o limite de livros pegos emprestado
+    #nao ter livros atrasados ----> OK
+    #nao ter multas ----> OK
+    #nao exceder o limite de livros pegos emprestado --->OK
     #nao pode emprestar da colecao reserva
     #so pode emprestar livros disponiveis  -----> OK
     
     exemplar = DAO.get_exemplar(emprestimo.ISBN, emprestimo.num_exemplar)
-    if exemplar['status'] == 'Indisponivel':
-        print("Exemplar indisponivel, ja esta emprestado.")
+    usuario = DAO.get_usuario(emprestimo.CPF)
     
+    limite_de_emprestimos = 4
+    emprestimos = usuario['emprestimos']
+    qtd_emprestimos = len(emprestimos)
+    
+    
+    if exemplar['status'] == 'Indisponivel':
+        print("Exemplar indisponivel.\n")
+        
+    
+    elif usuario_possui_atraso(emprestimo.CPF, data_hoje):
+        print("Usuario possui livro com atraso.\n")
+        
+    
+    elif usuario['Multa'] > 0:
+        print("Usuario possui multa pendente.\n")
+        
+    
+    elif qtd_emprestimos + 1 > limite_de_emprestimos: 
+        print("Usuario ja atingiu limite de emprestimos!\n")
+        
+    elif DAO.get_colecao(emprestimo.ISBN).lower() == "reserva":
+        print("Esse livro faz parte da colecao reserva, logo não pode ser emprestado.")
     
     else:
     
         DAO.atualizar_exemplar(emprestimo.ISBN, emprestimo.num_exemplar, "Indisponivel", emprestimo.CPF)
         DAO.adicionar_emprestimo_usuario(emprestimo)
     
+
+
+
+def devolver_livro(ISBN, num_exemplar,data_devolucao):
+    #apagar o emprestimo da lista de emprestimos do usuario ---> OK
+    #manter emprestimo na colecao emprestimos  ------> OK
+    #alterar data de devolucao no emprestimo ---->OK
+    #atualizar status e posse do exemplar ------> OK
+    #se houver atraso, cobrar multa ---> Ok
+    
+    emprestimo = DAO.get_emprestimo(ISBN, num_exemplar)
+    multa = None
+    
+    if data_devolucao > datetime.datetime.strptime(emprestimo['Fim'], "%d-%m-%Y").date():
+        multa = 30
+    
+    
+    DAO.atualizar_emprestimo(ISBN, num_exemplar, data_devolucao.strftime('%d-%m-%Y'), multa)  
+    DAO.atualizar_exemplar(ISBN, num_exemplar, 'Disponivel', None)
+    DAO.apagar_emprestimo_usuario(emprestimo['CPF'], emprestimo['id'], multa)
+    
+
 
 
 class Biblioteca:

@@ -15,6 +15,7 @@ import datetime
 #4-cadastrar livro
 #5-cadastrar exemplar
 #6-realizar emprestimo
+#7-Devolução de livro
 #7-localizar exemplar   PARA ESSE JA CRIEI A FUNCAO DAO.GET_EXEMPLAR()
 #8-renovar emprestimo
 
@@ -27,8 +28,9 @@ def menu():
     print("5- Cadastrar exemplar")
     print("6- Realizar emprestimo")
     print("7- Localizar exemplar")
-    print("8- Renovar empestimo")
-    print("9 - Comandos do desenvolvedor")
+    print("8- Devolucao de exemplar")
+    print("9- Renovar emprestimo")
+    print("10 - Comandos do desenvolvedor")
     print("0- Sair\n")
     
     opcao = int(input())
@@ -191,21 +193,34 @@ while escolha!= 0 :
             elif categoria == "Professor de pos-graduacao":
                 qtd_dias = 90
             
+            data_hoje = input("data de hoje (DD-MM-YYYY):")
+            data_hoje = datetime.datetime.strptime(data_hoje, "%d-%m-%Y").date()
+            
             emprestimo = biblioteca_com_teste_unitario.Emprestimo(data_hoje, ISBN, num_exemplar, CPF, qtd_dias)
+            biblioteca_com_teste_unitario.emprestar_livro(emprestimo,data_hoje)
             
-            biblioteca_com_teste_unitario.emprestar_livro(emprestimo)
-            
-
+    
+    #localizar exemplar
     elif escolha == 7:
         ISBN = input("ISBN:")
         numero = int(input("numero:"))
         exemplar = DAO.get_exemplar(ISBN, numero)
         print(exemplar)
         
+    
+    #devolver exemplar
+    elif escolha == 8:
+        ISBN = input("ISBN:")
+        num_exemplar = int(input("Exemplar:"))
+        data_devolucao = input("Data da devolucao (DD-MM-YYYY):")
+        
+        data_devolucao = datetime.datetime.strptime(data_devolucao, "%d-%m-%Y").date()
+        
+        biblioteca_com_teste_unitario.devolver_livro(ISBN, num_exemplar, data_devolucao)
 
 
     
-    elif escolha == 9: #opcoes de visualizacao
+    elif escolha == 10: #opcoes de visualizacao
         opcao = menu_do_desenvolvedor()
         
         #visualizar bibliotecarios
