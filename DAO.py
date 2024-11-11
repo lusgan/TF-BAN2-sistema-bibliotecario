@@ -5,14 +5,6 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client['biblioteca']  # Nome do banco de dados
 
 
-# Obtenha a coleção de bibliotecários
-#ibliotecarios = db.bibliotecarios.find({}, {"nome": 1, "_id": 0})  # Seleciona apenas o campo "nome"
-
-'''# Imprima o nome de cada bibliotecário
-print("Nomes dos Bibliotecários:")
-for bibliotecario in bibliotecarios:
-    print(bibliotecario["nome"])
-'''
 
 def cadastrar_bibliotecario(bibliotecario):
     resultado = db.bibliotecarios.insert_one(bibliotecario.to_json())
@@ -109,7 +101,7 @@ def adicionar_emprestimo_usuario(emprestimo):
     
     resultado = db.usuarios.update_one(
         {"CPF": emprestimo.CPF},
-        {"$push": {"emprestimos": emprestimo.to_json()}}
+        {"$push": {"Emprestimos": emprestimo.to_json()}}
     )
 
     if resultado.matched_count > 0:
@@ -134,21 +126,21 @@ def get_usuario(CPF):
 
 
 def get_emprestimo(ISBN, exemplar):
-    return db.emprestimos.find_one({"ISBN": ISBN, "exemplar": exemplar}, {'_id': 0})
+    return db.emprestimos.find_one({"ISBN": ISBN, "Exemplar": exemplar}, {'_id': 0})
 
 
-def atualizar_emprestimo(ISBN, exemplar, data_devolucao, multa):
+def atualizar_emprestimo(ISBN, exemplar, data_devolucao, multa, renovacoes, Fim):
     resultado = db.emprestimos.update_one(
-        {"ISBN": ISBN, "exemplar": exemplar},  # Filtro para encontrar o empréstimo
+        {"ISBN": ISBN, "Exemplar": exemplar},  # Filtro para encontrar o empréstimo
         {
             "$set": {
-                "data_devolucao": data_devolucao,  # Atualizar a data de devolução
-                "multa": multa  # Atualizar o valor da multa
+                "Fim" : Fim,
+                "Data de devolucao": data_devolucao,  # Atualizar a data de devolução
+                "Multa": multa,  # Atualizar o valor da multa
+                "Renovacoes" : renovacoes
             }
         }
     )
-    
-    
     
     # Verifica se o empréstimo foi encontrado e atualizado
     if resultado.matched_count > 0:
@@ -156,6 +148,7 @@ def atualizar_emprestimo(ISBN, exemplar, data_devolucao, multa):
     else:
         print("Empréstimo não encontrado.")
         
+
 
 def get_colecao(ISBN):
     # Realiza a consulta no MongoDB para encontrar o livro com o ISBN fornecido
@@ -178,13 +171,27 @@ def apagar_emprestimo_usuario(CPF, emprestimo_id, multa):
         {"CPF": CPF},  # Filtro para encontrar o usuário pelo CPF
         {
             "$pull": {  # Remove o empréstimo com o ID especificado
-                "emprestimos": {"id": emprestimo_id}
+                "Emprestimos": {"id": emprestimo_id}
             },
             "$set": {  # Atualiza o campo de multa, se aplicável
-                "multa": multa
+                "Multa": multa
             }
         }
     )
     
     
+def get_todos_emprestimos():
+    return db.emprestimos.find()
 
+
+def atualizar_emprestimo_em_usuario(CPF, id_emprestimo, renovacoes, Fim):
+    db.usuarios.update_one(
+        {"CPF": CPF, "Emprestimos.id": id_emprestimo},
+        {
+            "$set": {
+                "Emprestimos.$[emprestimo].Renovacoes": renovacoes,
+                "Emprestimos.$[emprestimo].Fim": Fim
+            }
+        },
+        array_filters=[{"emprestimo.id": id_emprestimo}]
+    )

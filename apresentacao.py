@@ -5,7 +5,7 @@ Created on Fri Nov  8 16:28:31 2024
 @author: balbi
 """
 
-import biblioteca_com_teste_unitario
+import biblioteca_camada_logica
 import DAO
 import datetime
 #Funcionalidades:
@@ -67,7 +67,7 @@ while escolha!= 0 :
         telefone = input("Telefone:")
         endereco = input("Endereco:")
         
-        bibliotechman = biblioteca_com_teste_unitario.Bibliotecario(cpf, nome, rua, cidade, cep, telefone, endereco)
+        bibliotechman = biblioteca_camada_logica.Bibliotecario(cpf, nome, rua, cidade, cep, telefone, endereco)
         DAO.cadastrar_bibliotecario(bibliotechman)
    
     
@@ -87,7 +87,7 @@ while escolha!= 0 :
         supervisores = input("CPF dos supervisores separado por virgula:")
         supervisores = supervisores.split(",")
         
-        assistente = biblioteca_com_teste_unitario.Assistente(cpf, nome, rua, cidade, cep, telefone, endereco, supervisores)
+        assistente = biblioteca_camada_logica.Assistente(cpf, nome, rua, cidade, cep, telefone, endereco, supervisores)
         DAO.cadastrar_assistente(assistente)
         
     
@@ -120,7 +120,7 @@ while escolha!= 0 :
             categoria = {'id': 4, 'categoria' :"Professor de pos-graduacao"}
         
         
-        usuario = biblioteca_com_teste_unitario.Usuario(cpf, nome, rua, cidade, cep, telefone, endereco, multa, categoria)
+        usuario = biblioteca_camada_logica.Usuario(cpf, nome, rua, cidade, cep, telefone, endereco, multa, categoria)
         DAO.cadastrar_usuario(usuario)
 
     
@@ -133,7 +133,7 @@ while escolha!= 0 :
         editora = input("editora:")
         colecao = input("colecao:")
         
-        livro = biblioteca_com_teste_unitario.Livro(titulo, autores, ISBN, editora, colecao)
+        livro = biblioteca_camada_logica.Livro(titulo, autores, ISBN, editora, colecao)
         DAO.cadastrar_livro(livro)
 
     
@@ -160,7 +160,7 @@ while escolha!= 0 :
                 elif status==2:
                     status = 'Indisponivel'
                 
-                exemplar = biblioteca_com_teste_unitario.Exemplar(num, status)
+                exemplar = biblioteca_camada_logica.Exemplar(num, status)
                 DAO.cadastrar_exemplar(exemplar,ISBN)
 
 
@@ -196,8 +196,8 @@ while escolha!= 0 :
             data_hoje = input("data de hoje (DD-MM-YYYY):")
             data_hoje = datetime.datetime.strptime(data_hoje, "%d-%m-%Y").date()
             
-            emprestimo = biblioteca_com_teste_unitario.Emprestimo(data_hoje, ISBN, num_exemplar, CPF, qtd_dias)
-            biblioteca_com_teste_unitario.emprestar_livro(emprestimo,data_hoje)
+            emprestimo = biblioteca_camada_logica.Emprestimo(data_hoje, ISBN, num_exemplar, CPF, qtd_dias)
+            biblioteca_camada_logica.emprestar_livro(emprestimo,data_hoje)
             
     
     #localizar exemplar
@@ -216,7 +216,18 @@ while escolha!= 0 :
         
         data_devolucao = datetime.datetime.strptime(data_devolucao, "%d-%m-%Y").date()
         
-        biblioteca_com_teste_unitario.devolver_livro(ISBN, num_exemplar, data_devolucao)
+        biblioteca_camada_logica.devolver_livro(ISBN, num_exemplar, data_devolucao)
+
+    
+    #renovar emprestimo
+    elif escolha == 9:
+        
+        ISBN = input('ISBN:')
+        num_exemplar = int(input("Exemplar:"))
+        data_hoje = input("data de hoje (DD-MM-YYYY):")
+        data_hoje = datetime.datetime.strptime(data_hoje, "%d-%m-%Y").date()
+        biblioteca_camada_logica.renovar_emprestimo(ISBN, num_exemplar, data_hoje)
+
 
 
     
@@ -267,7 +278,14 @@ while escolha!= 0 :
             for e in exemplares:
                 print(e)
                 print("\n")
+        
+        
+        elif opcao==6 :
+            emprestimos = DAO.get_todos_emprestimos()
             
+            for e in emprestimos:
+                print(e)
+                print("\n")
             
         
             
